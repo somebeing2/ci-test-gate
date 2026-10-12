@@ -6,6 +6,7 @@ Covers the `local`/`suggest` failure branches, gate mode returning exit code
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import textwrap
@@ -313,12 +314,15 @@ def test_module_entry_point_runs_as_a_script(tmp_path):
     diff_file.write_text(DIFF)
 
     repo_root = Path(__file__).resolve().parent.parent
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(repo_root / "src")
+    env["HOME"] = str(tmp_path)
     result = subprocess.run(
         [sys.executable, "-m", "ci_test_gate.cli", "suggest", "--diff", str(diff_file)],
         cwd=repo_root,
         capture_output=True,
         text=True,
-        env={"PATH": "/usr/bin:/bin", "PYTHONPATH": str(repo_root / "src"), "HOME": str(tmp_path)},
+        env=env,
     )
 
     assert result.returncode == 0, result.stderr
